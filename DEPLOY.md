@@ -54,12 +54,13 @@
 
 ### วิธี B: Deploy ด้วย Web Dashboard (Manual)
 
-1. ที่ Render Dashboard → **New +** → **Worker**
+1. ที่ Render Dashboard → **New +** → **Web Service**
 2. เชื่อม GitHub repo
 3. ตั้งค่า:
    - **Name**: `discord-g4f-bot`
    - **Region**: `Singapore` (ใกล้ไทยสุด)
    - **Branch**: `main`
+   - **Runtime**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `python main.py`
    - **Plan**: **Free** ✅
@@ -67,10 +68,10 @@
    - `DISCORD_TOKEN` = `<token จากขั้นตอนที่ 1>`
    - `G4F_MODEL` = `default`
    - `BOT_PREFIX` = `!`
-    - `COMMAND_NAME` = `ask`
-    - `COOLDOWN_SECONDS` = `30`
-    - `G4F_TIMEOUT` = `60`
-5. กด **Create Worker** → รอ deploy
+   - `COMMAND_NAME` = `ask`
+   - `COOLDOWN_SECONDS` = `30`
+   - `G4F_TIMEOUT` = `60`
+5. กด **Create Web Service** → รอ deploy
 
 ---
 
@@ -100,11 +101,12 @@ Logs → ควรเห็น:
 | RAM | **512 MB** |
 | CPU | **0.1 vCPU** |
 | Bandwidth | **100 GB/เดือน** |
-| Sleep (worker) | **❌ ไม่มี sleep!** (WebSocket heartbeat keep alive) |
-| Sleep (web service) | 15 นาที (แต่เราใช้ worker ไม่ใช่ web service) |
+| Sleep | **❌ ไม่มี sleep!** (Health check ping ทุก 5 นาที + Discord heartbeat) |
+| Health check | HTTP server พอร์ต `$PORT` — Render ping ป้องกัน sleep |
 
-> 💡 **Worker type** ไม่มี HTTP sleep — bot จะรันตลอด 24/7
-> ตราบใดที่ WebSocket เชื่อมต่อกับ Discord อยู่
+> 💡 Render ส่ง **health check ping** ทุก 5 นาทีไปที่ `/`
+> เรามี HTTP server รอตอบรับ + Discord WebSocket heartbeat ไปพร้อมกัน
+> → Bot ไม่หลับ 24/7
 
 ---
 

@@ -1,12 +1,12 @@
 # ═══════════════════════════════════════════════════════════
-# Render Blueprint — Discord Bot (Worker Type)
+# Render Blueprint — Discord Bot (Web Service)
 # ═══════════════════════════════════════════════════════════
-# worker = ไม่มี HTTP sleep → WebSocket อยู่ตลอด 24/7
+# Render health check ping ทุก 5 นาที + Discord heartbeat = ไม่ sleep
 # region singapore → latency ต่ำสุดสำหรับไทย
 # ═══════════════════════════════════════════════════════════
 
 services:
-  - type: worker
+  - type: web
     name: discord-g4f-bot
     env: python
     region: singapore

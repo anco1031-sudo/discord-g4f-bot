@@ -3,13 +3,15 @@
 Discord AI Bot — powered by g4f (GPT4Free) 🤖✨
 Auto-select provider via model="default" → ไม่ต้องกลัว provider ดับ
 
-Deploy: Render (worker type) → WebSocket heartbeat keep alive ตลอด
+Deploy: Render (web service) → HTTP health check + WebSocket heartbeat ป้องกัน sleep
 """
 
 import asyncio
 import logging
 import os
 import sys
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import discord
 from discord.ext import commands
@@ -83,7 +85,7 @@ bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents, help_command=None
 async def on_ready():
     """เรียกเมื่อ bot พร้อมทำงาน"""
     logger.info(f"✅ Logged in as {bot.user} (ID: {bot.user.id})")
-    logger.info(f"📡 WebSocket connected — Render worker = no sleep (heartbeat ตลอด)")
+    logger.info(f"📡 WebSocket connected — Render health check ping + Discord heartbeat = no sleep")
     logger.info(f"🤖 g4f model: {G4F_MODEL_STR} (auto provider)")
     logger.info(f"💬 Prefix: '{BOT_PREFIX}' | Command: '{COMMAND_NAME}'")
     logger.info(f"⏱️  Cooldown: {COOLDOWN_SECONDS}s | Timeout: {G4F_TIMEOUT}s")
@@ -288,10 +290,25 @@ async def send_long_message(ctx, text: str):
 
 
 # ═══════════════════════════════════════════════════════════
-# แถม: auto-restart helper (ใช้ตอน development)
+# HTTP Health Check Server (สำหรับ Render web service)
 # ═══════════════════════════════════════════════════════════
-# ถ้าอยากให้ bot auto-restart เมื่อ token ว่าง ไม่ต้องทำอะไร
-# Render จะ restart ให้เองถ้า process crash
+# Render ส่ง ping ทุก 5 นาที → ป้องกัน sleep
+# ใช้พอร์ตจาก $PORT env (Render กำหนดให้)
+
+class _HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+    def log_message(self, fmt, *args):
+        pass  # ไม่ต้อง log
+
+def _run_health_server():
+    port = int(os.getenv("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), _HealthHandler)
+    logger.info(f"🏥 Health check server listening on port {port}")
+    server.serve_forever()
+
 
 # ═══════════════════════════════════════════════════════════
 # Entry Point
@@ -304,6 +321,10 @@ def main():
         logger.error("   หรือใส่ใน Render Dashboard → Environment Variables")
         sys.exit(1)
 
+    # เริ่ม HTTP health check server (กัน Render sleep)
+    health_thread = threading.Thread(target=_run_health_server, daemon=True)
+    health_thread.start()
+
     logger.info("🚀 กำลังเริ่ม Discord Bot...")
     logger.info(f"   g4f Model:  {G4F_MODEL_STR}")
     logger.info(f"   Prefix:     {BOT_PREFIX}")
@@ -311,7 +332,7 @@ def main():
     logger.info(f"   Cooldown:   {COOLDOWN_SECONDS}s")
     logger.info(f"   Timeout:    {G4F_TIMEOUT}s")
     logger.info(f"   System:     {SYSTEM_PROMPT[:50]}...")
-    logger.info(f"   Platform:   Render (Worker Type) → ไม่มี sleep!")
+    logger.info(f"   Platform:   Render (Web Service + Health Check) → ไม่ sleep")
     logger.info("=" * 50)
 
     try:

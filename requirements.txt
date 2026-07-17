@@ -1,0 +1,14 @@
+# ═══════════════════════════════════════════════════════════
+# Discord Bot + g4f — Dependencies
+# ═══════════════════════════════════════════════════════════
+# ⚠️ g4f v7.x+ เปลี่ยน API → ต้อง cap version ไว้
+#    ใช้ legacy API (ChatCompletion.create_async) ได้ถึง v7.x
+# ═══════════════════════════════════════════════════════════
+
+# Discord library (WebSocket Gateway → keep alive ตลอด)
+discord.py>=2.3.0
+
+# GPT4Free — auto provider selection (model="default")
+# ไม่ต้องใช้ OpenAI API key!
+# ถ้าอัปเกรดแล้วพัง → pin g4f~=0.4.0 หรือ migrate ไป AsyncClient
+g4f>=0.4.0,<8.0.0

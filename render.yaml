@@ -1,0 +1,30 @@
+# ═══════════════════════════════════════════════════════════
+# Render Blueprint — Discord Bot (Worker Type)
+# ═══════════════════════════════════════════════════════════
+# worker = ไม่มี HTTP sleep → WebSocket อยู่ตลอด 24/7
+# region singapore → latency ต่ำสุดสำหรับไทย
+# ═══════════════════════════════════════════════════════════
+
+services:
+  - type: worker
+    name: discord-g4f-bot
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false  # กรอกตอน deploy ใน Dashboard
+      - key: G4F_MODEL
+        value: default
+      - key: BOT_PREFIX
+        value: "!"
+      - key: COMMAND_NAME
+        value: ask
+      - key: COOLDOWN_SECONDS
+        value: "30"
+      - key: G4F_TIMEOUT
+        value: "60"
+      # - key: OWNER_ID
+      #   value: "your_discord_user_id"  # ← uncomment ถ้าจำกัดเฉพาะ owner

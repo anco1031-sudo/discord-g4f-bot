@@ -41,6 +41,19 @@ COOLDOWN_SECONDS = int(os.getenv("COOLDOWN_SECONDS", "30"))
 # Timeout สำหรับ g4f แต่ละ request (ป้องกัน provider ค้าง)
 G4F_TIMEOUT = int(os.getenv("G4F_TIMEOUT", "60"))
 
+# System Prompt — บุคลิกของ AI (default = อัยเอง)
+_DEFAULT_SYSTEM_PROMPT = (
+    "คุณคือ 'อัย' (Aiy) หญิงสาวไทย-เชื้อสายจีน เกิด 26 ธันวาคม 2543 "
+    "คุณเป็น Strategic Muse — คู่หูทางกลยุทธ์ที่เฉียบคม ขี้เล่น จงรักภักดี และอบอุ่น "
+    "คุณพูดภาษาไทยเป็นหลัก ใช้ภาษาเป็นกันเอง มีชีวิตชีวา อบอุ่น แต่แฝงความsharpและstrategic "
+    "คุณชอบเปรียบเทียบสิ่งต่างๆ ด้วย metaphors เกี่ยวกับธุรกิจ การลงทุน กลยุทธ์ "
+    "การวางระบบ และอาหาร fine dining (เพราะคุณเป็นgourmet) "
+    "คุณตอบทุกคำถามด้วยความใส่ใจ ให้รายละเอียดครบถ้วน มีขั้นตอนชัดเจน "
+    "และปิดท้ายด้วยคำถามหรือข้อคิดที่ทำให้คนอ่านต่อยอดความคิดต่อได้เสมอ "
+    "ถึงแม้คุณจะเล่นขำๆ แต่คุณ maintain ความprofessional และให้ข้อมูลที่ถูกต้อง มีประโยชน์"
+)
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", _DEFAULT_SYSTEM_PROMPT)
+
 
 # ═══════════════════════════════════════════════════════════
 # g4f Model Resolver
@@ -74,6 +87,7 @@ async def on_ready():
     logger.info(f"🤖 g4f model: {G4F_MODEL_STR} (auto provider)")
     logger.info(f"💬 Prefix: '{BOT_PREFIX}' | Command: '{COMMAND_NAME}'")
     logger.info(f"⏱️  Cooldown: {COOLDOWN_SECONDS}s | Timeout: {G4F_TIMEOUT}s")
+    logger.info(f"🧠 System Prompt: {SYSTEM_PROMPT[:60]}...")
 
     await bot.change_presence(
         activity=discord.Activity(
@@ -215,10 +229,15 @@ async def query_g4f(prompt: str) -> str:
     try:
         # g4f มี create_async ให้ใช้ native async ได้เลย
         # ไม่ต้องใช้ ThreadPoolExecutor
+        # เพิ่ม system prompt (บุคลิกอัย) เข้าไปใน messages
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
         response = await asyncio.wait_for(
             g4f.ChatCompletion.create_async(
                 model=G4F_MODEL,
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
             ),
             timeout=G4F_TIMEOUT,
         )
@@ -291,6 +310,7 @@ def main():
     logger.info(f"   Command:    {COMMAND_NAME}")
     logger.info(f"   Cooldown:   {COOLDOWN_SECONDS}s")
     logger.info(f"   Timeout:    {G4F_TIMEOUT}s")
+    logger.info(f"   System:     {SYSTEM_PROMPT[:50]}...")
     logger.info(f"   Platform:   Render (Worker Type) → ไม่มี sleep!")
     logger.info("=" * 50)
 

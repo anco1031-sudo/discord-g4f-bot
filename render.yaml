@@ -26,5 +26,7 @@ services:
         value: "30"
       - key: G4F_TIMEOUT
         value: "60"
+      # - key: SYSTEM_PROMPT
+      #   value: "คุณคือ... (ไม่ใส่ = default บุคลิกอัย)"
       # - key: OWNER_ID
       #   value: "your_discord_user_id"  # ← uncomment ถ้าจำกัดเฉพาะ owner
